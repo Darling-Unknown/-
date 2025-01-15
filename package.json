@@ -46,6 +46,7 @@
     "tough-cookie": "^5.0.0",
     "whatsapp-web.js": "^1.23.0",
     "ws": "^8.17.1",
+    "express":^4.21.2",
     "yargs-parser": "^21.1.1"
   }
 }
