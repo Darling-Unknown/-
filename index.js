@@ -549,6 +549,16 @@ async function startBot() {
         startBot();
     }
 }
+app.get('/', (req, res) => {
+    res.send('Knightbot is running!');
+});
+
+app.listen(PORT, () => {
+    console.log(`Knightbot server is listening on port ${PORT}`);
+});
+
+// Your bot initialization
+startBot();
 
 // Start the bot
 startBot();
