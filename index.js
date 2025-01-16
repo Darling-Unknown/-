@@ -1,4 +1,4 @@
-
+//🥹
 const TelegramBot = require('node-telegram-bot-api');
 
 // Replace this with your Telegram bot token and user ID
@@ -18,7 +18,7 @@ const PORT = 8080;
 // Global settings
 global.packname = settings.packname;
 global.author = settings.author;
-global.channelLink = "https://whatsapp.com/channel/0029Va90zAnIHphOuO8Msp3A";
+global.channelLink = "None";
 global.ytch = "Mr Unique Hacker";
 
 // Commands
