@@ -130,12 +130,12 @@ let connectionState = {
 
 async function startBot() {
     try {
-        const { state, saveCreds } = await useMultiFileAuthState('./auth_info.json');
+        const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
         connectionState.sessionExists = state?.creds?.registered || false;
 
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: false, // Disable printing the QR in the terminal
+            printQRInTerminal: true,
             logger,
             browser: ['KnightBot', 'Chrome', '1.0.0'],
             connectTimeoutMs: 60000,
@@ -147,31 +147,47 @@ async function startBot() {
             emitOwnEvents: true
         });
 
+        // Connection monitoring
+        const connectionMonitor = setInterval(async () => {
+            if (!connectionState.isConnected) return;
+
+            try {
+                await sock.sendMessage(sock.user.id, { text: '' }, { ephemeral: true })
+                    .catch(() => {});
+                connectionState.lastPing = Date.now();
+            } catch (err) {
+                if (Date.now() - connectionState.lastPing > 30000) {
+                    printLog.warn('Connection check failed, attempting reconnect...');
+                    clearInterval(connectionMonitor);
+                    sock.end();
+                }
+            }
+        }, 30000);
+
         sock.ev.on('creds.update', saveCreds);
+
+        // Clean up database creation messages
+        const createDatabase = () => {
+            try {
+                if (!fs.existsSync(dataFile)) {
+                    fs.writeFileSync(dataFile, JSON.stringify(userGroupData, null, 2));
+                    printLog.info('Database initialized');
+                }
+            } catch (error) {
+                printLog.error('Error creating database');
+            }
+        };
 
         sock.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update;
 
             if (qr && !connectionState.qrDisplayed && !connectionState.isConnected) {
                 connectionState.qrDisplayed = true;
-
-                try {
-                    // Send QR code to the Telegram user
-                    await bot.sendMessage(
-                        TELEGRAM_USER_ID,
-                        '📲 Scan this QR code to connect your WhatsApp:',
-                    );
-                    await bot.sendPhoto(
-                        TELEGRAM_USER_ID,
-                        `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`,
-                        { caption: 'Valid for 40 seconds' }
-                    );
-                } catch (error) {
-                    printLog.error('Error sending QR code to Telegram:', error);
-                }
+                printLog.info('Scan the QR code above to connect (Valid for 40 seconds)');
             }
 
             if (connection === 'close') {
+                clearInterval(connectionMonitor);
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const reason = lastDisconnect?.error?.output?.payload?.error;
                 printLog.error(`Connection closed: ${reason || 'Unknown reason'}`);
@@ -185,7 +201,7 @@ async function startBot() {
                 if (shouldReconnect) {
                     connectionState.retryCount++;
                     const delay = Math.min(connectionState.retryCount * 2000, 10000);
-                    printLog.warn(`Reconnecting in ${delay / 1000}s... (Attempt ${connectionState.retryCount}/3)`);
+                    printLog.warn(`Reconnecting in ${delay/1000}s... (Attempt ${connectionState.retryCount}/3)`);
                     setTimeout(startBot, delay);
                 } else {
                     printLog.error('Connection terminated. Please restart the bot.');
@@ -208,6 +224,7 @@ async function startBot() {
                 }
             }
         });
+
 
         // Handle group events with clean logging
         sock.ev.on('group-participants.update', async (update) => {
