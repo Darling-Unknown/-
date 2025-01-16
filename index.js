@@ -19,7 +19,7 @@ const PORT = 8080;
 global.packname = settings.packname;
 global.author = settings.author;
 global.channelLink = "None";
-global.ytch = "Mr Unique Hacker";
+global.ytch = "Unknown";
 
 // Commands
 const tagAllCommand = require('./commands/tagall');
