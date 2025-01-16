@@ -130,7 +130,7 @@ let connectionState = {
 
 async function startBot() {
     try {
-        const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
+        const { state, saveCreds } = await useMultiFileAuthState('./auth_info.json');
         connectionState.sessionExists = state?.creds?.registered || false;
 
         const sock = makeWASocket({
