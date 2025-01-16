@@ -563,8 +563,7 @@ async function startBot() {
         });
 
         const delay = Math.min(1000 * Math.pow(2, connectionState.retryCount), 60000);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        connectionState.retryCount++;
+       
         startBot();
 
 app.get('/', (req, res) => {
