@@ -6,7 +6,7 @@ const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = requi
 const P = require('pino');
 const express = require('express');
 const app = express();
-const Port = 8080;
+const PORT = 8080;
 
 // Global settings
 global.packname = settings.packname;
