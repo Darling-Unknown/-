@@ -44,7 +44,7 @@
     "request": "^2.88.2",
     "sharp": "^0.32.6",
     "tough-cookie": "^5.0.0",
-    "whatsapp-web.js": "^1.23.0",
+    "whatsapp-web.js": "^1.26.0",
     "ws": "^8.17.1",
     "express": "^4.21.2",
     "yargs-parser": "^21.1.1",
