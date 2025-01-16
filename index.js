@@ -562,14 +562,14 @@ async function startBot() {
             }
         });
 
-    } catch (err) {
+    catch (err) {
         printLog.error('Error in bot initialization:', err);
         const delay = Math.min(1000 * Math.pow(2, connectionState.retryCount), 60000);
         await new Promise(resolve => setTimeout(resolve, delay));
         connectionState.retryCount++;
         startBot();
     }
-}
+
 
 app.get('/', (req, res) => {
     res.send('Knightbot is running!');
