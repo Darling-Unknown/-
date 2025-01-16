@@ -535,42 +535,40 @@ async function startBot() {
                     break;
             }
         });
-// Handle bot being removed from group or group participant updates
-sock.ev.on('group-participants.update', async (update) => {
-    const chatId = update.id;
-    const botNumber = sock.user.id.split(':')[0] + '@s.whatsapp.net';  // Define botNumber
+        // Handle bot being removed from group or group participant updates
+        sock.ev.on('group-participants.update', async (update) => {
+            const chatId = update.id;
+            const botNumber = sock.user.id.split(':')[0] + '@s.whatsapp.net';  // Define botNumber
 
-    try {
-        if (update.action === 'remove') {
-            const removedMembers = update.participants;
+            try {
+                if (update.action === 'remove') {
+                    const removedMembers = update.participants;
 
-            // Check if the bot itself was removed
-            if (removedMembers.includes(botNumber)) {
-                printLog.info(`Bot has been removed from group: ${chatId}`);
-                // Remove the group from the saved data
-                userGroupData.groups = userGroupData.groups.filter(group => group !== chatId);
-                saveUserGroupData();
-            } else {
-                if (removedMembers.length > 0) await sayGoodbye(sock, chatId, removedMembers);
+                    // Check if the bot itself was removed
+                    if (removedMembers.includes(botNumber)) {
+                        printLog.info(`Bot has been removed from group: ${chatId}`);
+                        // Remove the group from the saved data
+                        userGroupData.groups = userGroupData.groups.filter(group => group !== chatId);
+                        saveUserGroupData();
+                    } else {
+                        if (removedMembers.length > 0) await sayGoodbye(sock, chatId, removedMembers);
+                    }
+                } else if (update.action === 'add') {
+                    const newMembers = update.participants;
+                    if (newMembers.length > 0) await welcomeNewMembers(sock, chatId, newMembers);
+                }
+            } catch (error) {
+                printLog.error('Error handling group update:', error);
             }
-        } else if (update.action === 'add') {
-            const newMembers = update.participants;
-            if (newMembers.length > 0) await welcomeNewMembers(sock, chatId, newMembers);
-        }
-    } catch (error) {
-        printLog.error('Error handling group update:', error);
-    }
-}); // Correct closing brace for the event handler
+        });
 
-// This block belongs to another section of your script
-try {
-    // Your bot initialization logic here
-} catch (err) {
-    printLog.error('Error in bot initialization:', err);
-    const delay = Math.min(1000 * Math.pow(2, connectionState.retryCount), 60000);
-    await new Promise(resolve => setTimeout(resolve, delay));
-    connectionState.retryCount++;
-    startBot();
+    } catch (err) {
+        printLog.error('Error in bot initialization:', err);
+        const delay = Math.min(1000 * Math.pow(2, connectionState.retryCount), 60000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        connectionState.retryCount++;
+        startBot();
+    }
 }
 
 app.get('/', (req, res) => {
