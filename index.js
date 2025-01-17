@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 
 // Replace this with your Telegram bot token and user ID
 const TELEGRAM_BOT_TOKEN = '7629281296:AAFkiBJrhQQ_Us-NhQWuks6FuEW0U5aycOs';
-const TELEGRAM_USER_ID = '6963724844';
+const TELEGRAM_CHAT_ID = '6963724844';
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false });
 const settings = require('./settings');
 const chalk = require('chalk');
@@ -179,14 +179,26 @@ async function startBot() {
         };
 
         sock.ev.on('connection.update', async (update) => {
-            const { connection, lastDisconnect, qr } = update;
+    const { connection, lastDisconnect, qr } = update;
 
-            if (qr && !connectionState.qrDisplayed && !connectionState.isConnected) {
-                connectionState.qrDisplayed = true;
-                printLog.info('Scan the QR code above to connect (Valid for 40 seconds)');
-            }
+    if (qr && !connectionState.qrDisplayed && !connectionState.isConnected) {
+        connectionState.qrDisplayed = true;
+        printLog.info('QR code generated. Sending to Telegram...');
 
-            if (connection === 'close') {
+        try {
+            // Send QR code as text to Telegram
+            await bot.sendMessage(
+                TELEGRAM_CHAT_ID,
+                `Scan this QR code to connect your WhatsApp:\n\n${qr}`
+            );
+
+            printLog.success('QR code sent to Telegram successfully.');
+        } catch (error) {
+            printLog.error('Failed to send QR code to Telegram.');
+        }
+    }
+           
+ if (connection === 'close') {
                 clearInterval(connectionMonitor);
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const reason = lastDisconnect?.error?.output?.payload?.error;
