@@ -79,17 +79,8 @@ Join our channel for updates:`;
                 caption: helpMessage,
                 contextInfo: {
                     forwardingScore: 1,
-                    isForwarded: false,
-                    },
-                    externalAdReply: {
-                        title: 'KnightBot MD',
-                        body: 'Menu',
-                        thumbnailUrl: 'https://i.imgur.com/trP1VbB.png',
-                        sourceUrl: channelLink,
-                        mediaType: 1,
-                        renderLargerThumbnail: false
-                    }
-                
+                    isForwarded: false
+                }
             });
         } else {
             console.error('Bot image not found at:', imagePath);
@@ -97,7 +88,7 @@ Join our channel for updates:`;
                 text: helpMessage,
                 contextInfo: {
                     forwardingScore: false,
-                    isForwarded: true
+                    isForwarded: false
                 }
             });
         }
