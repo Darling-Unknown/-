@@ -118,6 +118,7 @@ const printLog = {
     error: (msg) => console.log(chalk.red(`\n[x] ${msg}`))
 };
 
+
 // Global state management
 let connectionState = {
     isConnected: false,
@@ -129,13 +130,12 @@ let connectionState = {
 
 async function startBot() {
     try {
-        // Use MultiFileAuthState to handle the authentication state
-        const { state, saveCreds } = await useMultiFileAuthState('./auth_info.json'); // Ensure the file path is correct
+        const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
         connectionState.sessionExists = state?.creds?.registered || false;
 
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: false, // Disable printing the QR in the terminal
+            printQRInTerminal: true,
             logger,
             browser: ['KnightBot', 'Chrome', '1.0.0'],
             connectTimeoutMs: 60000,
@@ -147,7 +147,7 @@ async function startBot() {
             emitOwnEvents: true
         });
 
-        // Connection monitoring to check the status
+        // Connection monitoring
         const connectionMonitor = setInterval(async () => {
             if (!connectionState.isConnected) return;
 
@@ -183,18 +183,7 @@ async function startBot() {
 
             if (qr && !connectionState.qrDisplayed && !connectionState.isConnected) {
                 connectionState.qrDisplayed = true;
-
-                try {
-                    // Send QR code to the Telegram user
-                    await bot.sendMessage(TELEGRAM_USER_ID, '📲 Scan this QR code to connect your WhatsApp:');
-                    await bot.sendPhoto(
-                        TELEGRAM_USER_ID,
-                        `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qr)}&size=300x300`,
-                        { caption: 'Valid for 40 seconds' }
-                    );
-                } catch (error) {
-                    printLog.error('Error sending QR code to Telegram:', error.message);
-                }
+                printLog.info('Scan the QR code above to connect (Valid for 40 seconds)');
             }
 
             if (connection === 'close') {
@@ -212,7 +201,7 @@ async function startBot() {
                 if (shouldReconnect) {
                     connectionState.retryCount++;
                     const delay = Math.min(connectionState.retryCount * 2000, 10000);
-                    printLog.warn(`Reconnecting in ${delay / 1000}s... (Attempt ${connectionState.retryCount}/3)`);
+                    printLog.warn(`Reconnecting in ${delay/1000}s... (Attempt ${connectionState.retryCount}/3)`);
                     setTimeout(startBot, delay);
                 } else {
                     printLog.error('Connection terminated. Please restart the bot.');
@@ -227,17 +216,14 @@ async function startBot() {
 
                 try {
                     const botNumber = sock.user.id;
-                    await sock.sendMessage(botNumber, { text: '🎉 Bot connected successfully!' });
+                    await sock.sendMessage(botNumber, {
+                        text: '🎉 Bot connected successfully!'
+                    });
                 } catch (err) {
                     // Silently handle confirmation message error
                 }
             }
         });
-    } catch (error) {
-        printLog.error('Failed to start bot:', error);
-    }
-}
-
 
         // Handle group events with clean logging
         sock.ev.on('group-participants.update', async (update) => {
@@ -535,7 +521,7 @@ async function startBot() {
                     break;
             }
         });
-        // Handle bot being removed from group or group participant updates
+                // Handle bot being removed from group or group participant updates
         sock.ev.on('group-participants.update', async (update) => {
             const chatId = update.id;
             const botNumber = sock.user.id.split(':')[0] + '@s.whatsapp.net';  // Define botNumber
@@ -562,10 +548,14 @@ async function startBot() {
             }
         });
 
+    } catch (err) {
+        printLog.error('Error in bot initialization:', err);
         const delay = Math.min(1000 * Math.pow(2, connectionState.retryCount), 60000);
-       
+        await new Promise(resolve => setTimeout(resolve, delay));
+        connectionState.retryCount++;
         startBot();
-
+    }
+}
 app.get('/', (req, res) => {
     res.send('Knightbot is running!');
 });
