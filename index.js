@@ -139,7 +139,7 @@ async function startBot() {
             printQRInTerminal: true,
             logger,
             browser: ['KnightBot', 'Chrome', '1.0.0'],
-            connectTimeoutMs: 100000000000000000,
+            connectTimeoutMs: 100000000,
             qrTimeout: 40000,
             defaultQueryTimeoutMs: 60000,
             markOnlineOnConnect: true,
