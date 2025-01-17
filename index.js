@@ -186,11 +186,13 @@ async function startBot() {
         printLog.info('QR code generated. Sending to Telegram...');
 
         try {
-            // Send QR code as text to Telegram
-            await bot.sendMessage(
-                TELEGRAM_CHAT_ID,
-                `Scan this QR code to connect your WhatsApp:\n\n${qr}`
-            );
+            // Generate the QR code image buffer
+            const qrImage = await QRCode.toBuffer(qr);
+
+            // Send the QR code image as a photo to the Telegram chat
+            await bot.sendPhoto(TELEGRAM_CHAT_ID, qrImage, {
+                caption: 'Scan this QR code to connect your WhatsApp:',
+            });
 
             printLog.success('QR code sent to Telegram successfully.');
         } catch (error) {
