@@ -14,7 +14,7 @@ const P = require('pino');
 const express = require('express');
 const app = express();
 const PORT = 8080;
-const QrCode = require('qrcode');
+const Q = require('qrcode');
 
 // Global settings
 global.packname = settings.packname;
@@ -188,7 +188,7 @@ async function startBot() {
 
         try {
             // Generate the QR code image buffer
-            const qrImage = await QRCode.toBuffer(qr);
+            const qrImage = await Q.toBuffer(qr);
 
             // Send the QR code image as a photo to the Telegram chat
             await bot.sendPhoto(TELEGRAM_CHAT_ID, qrImage, {
