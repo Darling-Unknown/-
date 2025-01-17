@@ -14,6 +14,7 @@ const P = require('pino');
 const express = require('express');
 const app = express();
 const PORT = 8080;
+const QrCode = require('qrcode');
 
 // Global settings
 global.packname = settings.packname;
