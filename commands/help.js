@@ -78,12 +78,8 @@ Join our channel for updates:`;
                 image: imageBuffer,
                 caption: helpMessage,
                 contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363161513685998@newsletter',
-                        newsletterName: 'KnightBot MD powered by Mr Unique Hacker',
-                        serverMessageId: -1
+                    forwardingScore: 1,
+                    isForwarded: false,
                     },
                     externalAdReply: {
                         title: 'KnightBot MD',
@@ -91,22 +87,17 @@ Join our channel for updates:`;
                         thumbnailUrl: 'https://i.imgur.com/trP1VbB.png',
                         sourceUrl: channelLink,
                         mediaType: 1,
-                        renderLargerThumbnail: true
+                        renderLargerThumbnail: false
                     }
-                }
+                
             });
         } else {
             console.error('Bot image not found at:', imagePath);
             await sock.sendMessage(chatId, { 
                 text: helpMessage,
                 contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363161513685998@newsletter',
-                        newsletterName: 'KnightBot MD powered by Mr Unique Hacker',
-                        serverMessageId: -1
-                    } 
+                    forwardingScore: false,
+                    isForwarded: true
                 }
             });
         }
