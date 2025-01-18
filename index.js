@@ -1,4 +1,4 @@
-//🥹
+//🌞
 const TelegramBot = require('node-telegram-bot-api');
 
 // Replace this with your Telegram bot token and user ID
